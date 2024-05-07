@@ -19,7 +19,7 @@ extern "C" DLLEXPORT bool F4SEAPI F4SEPlugin_Query(const F4SE::QueryInterface* a
 {
 	a_info->infoVersion = F4SE::PluginInfo::kVersion;
 	a_info->name = "LongLoadingTimesFix";
-	a_info->version = 1.1;
+	a_info->version = 1.11;
 
 	return true;
 }

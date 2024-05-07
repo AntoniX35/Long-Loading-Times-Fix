@@ -51,7 +51,6 @@ namespace LongLoadingTimesFix
 		REL::Relocation<std::uintptr_t> TimeoutFix1AddressNG{ REL::ID(2229488), 0x267};
 		REL::Relocation<std::uintptr_t> TimeoutFix2AddressNG{ REL::ID(2275102), 0x341};
 		REL::Relocation<std::uintptr_t> LoadingFix1AddressNG{ REL::ID(2276834), 0x36};
-		REL::Relocation<std::uintptr_t> LoadingFix2AddressNG{ REL::ID(2276833), 0x224};
 		REL::Relocation<std::uintptr_t> BethesdaVsyncAddressNG{ REL::ID(2277018), 0x332};
 		REL::Relocation<std::uintptr_t> BethesdaFPSCap1AddressNG{ REL::ID(2228907), 0xBC7}; 
 		REL::Relocation<std::uintptr_t> BethesdaFPSCap2AddressNG{ REL::ID(2228907), 0xBD0};
@@ -92,7 +91,6 @@ namespace LongLoadingTimesFix
 		}
 		if (*Config::Fixes::bLoadingFix) {		
 			REL::safe_write(LoadingFix1AddressNG.address(), &bytes2, sizeof(bytes2));
-			REL::safe_write(LoadingFix2AddressNG.address(), &NOP6, sizeof(NOP6));
 		}
 		if (*Config::LoadingScreens::bOnlyBlack) {
 			constexpr std::uint8_t bytes3[] = { 0xE9, 0xFC, 0x01, 0x00, 0x00, 0x90 };
