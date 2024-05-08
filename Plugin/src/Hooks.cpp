@@ -5,12 +5,13 @@ long long PerfCounter::perf_freq;
 float PerfCounter::perf_freqf;
 
 bool limit, disableVSync, vsync;
-long long timing, CurrentFPS, FPSui, loadingFPSmax;
+long long timing1, timing2, CurrentFPS, FPSui, loadingFPSmax;
 int* ipresentinterval;
 float ingamefps, loadingscreenfps;
 
 namespace LongLoadingTimesFix
 {
+	constexpr std::uint8_t NOP[] = { 0x90 };
 	constexpr std::uint8_t NOP3[] = { 0x0F, 0x1F, 0x00 };
 	constexpr std::uint8_t NOP4[] = { 0x0F, 0x1F, 0x40, 0x00 };
 	constexpr std::uint8_t NOP6[] = { 0x66, 0x0F, 0x1F, 0x44, 0x00, 0x00 };
@@ -18,27 +19,33 @@ namespace LongLoadingTimesFix
 	uint32_t maxrefreshrate = 10000;
 	constexpr std::uint8_t bytes4[] = { 0xEB };
 	
-	void LimiterFunc() {
+	void LimiterFunc1() {
+		if (loadingFPSmax > 0) {
+			while (PerfCounter::deltal(timing1, ::_Query_perf_counter())
+				< loadingFPSmax)
+			{
+				::Sleep(0);
+			}
+			timing1 = ::_Query_perf_counter();
+		}
+	}
+	
+	void LimiterFunc2() {
 		if (CurrentFPS > 0) {
-			while (PerfCounter::deltal(timing, ::_Query_perf_counter())
+			while (PerfCounter::deltal(timing2, ::_Query_perf_counter())
 				< CurrentFPS)
 			{
 				::Sleep(0);
 			}
 		}
-		timing = ::_Query_perf_counter();
+		timing2 = ::_Query_perf_counter();
 	}
 		
 	void Install()
 	{
 		const auto ui = RE::UI::GetSingleton();
 		ui->GetEventSource<RE::MenuOpenCloseEvent>()->RegisterSink(new MenuWatcher());
-		if (*Config::Limiter::iInGameFPS > 0) {
-			ingamefps = 1.0f / *Config::Limiter::iInGameFPS;
-		}
-		if (*Config::Limiter::iLoadingScreenFPS > 0) {
-			loadingscreenfps = 1.0f / *Config::Limiter::iLoadingScreenFPS;
-		}
+
 		if (*Config::Limiter::bDisableVSyncWhileLoading) {
 			disableVSync = true;
 		}
@@ -46,7 +53,8 @@ namespace LongLoadingTimesFix
 			disableVSync = false;
 			*Config::Limiter::iLoadingScreenFPS = 0;
 		}
-		REL::Relocation<std::uintptr_t> FPSLimiterAddressNG{ REL::ID(2276834), 0xE};
+		REL::Relocation<std::uintptr_t> FPSLimiter1AddressNG{ REL::ID(2227631), 0xE1};
+		REL::Relocation<std::uintptr_t> FPSLimiter2AddressNG{ REL::ID(2276834), 0xE};
 		REL::Relocation<std::uintptr_t> QuickLoadAddressNG{ REL::ID(2275102), 0x536};
 		REL::Relocation<std::uintptr_t> TimeoutFix1AddressNG{ REL::ID(2229488), 0x267};
 		REL::Relocation<std::uintptr_t> TimeoutFix2AddressNG{ REL::ID(2275102), 0x341};
@@ -62,19 +70,27 @@ namespace LongLoadingTimesFix
 		REL::Relocation<std::uintptr_t> LoadingMenuSpeedHookAddressNG{ REL::ID(2248711), 0x38};
 		REL::Relocation<float*> FrametimeAddressNG{ REL::ID(2703181) };
 		
-		if (*Config::Limiter::iInGameFPS > 0 || *Config::Limiter::iLoadingScreenFPS > 0) {
+		if (*Config::Limiter::iLoadingScreenFPS > 0) {
+			timing1 = _Query_perf_counter();
 			limit = true;
-			timing = _Query_perf_counter();
-			auto& trampoline = F4SE::GetTrampoline();
-			trampoline.write_call<5>(FPSLimiterAddressNG.address(), &LimiterFunc);
-			CurrentFPS = FPSui = static_cast<long long>(ingamefps * 1000000.0);
+			loadingscreenfps = 1.0f / *Config::Limiter::iLoadingScreenFPS;
 			loadingFPSmax = static_cast<long long>(loadingscreenfps * 1000000.0);
+			auto& trampoline = F4SE::GetTrampoline();
+			trampoline.write_call<5>(FPSLimiter1AddressNG.address(), &LimiterFunc1);
+			REL::safe_write(FPSLimiter1AddressNG.address() + 0x5, &NOP, sizeof(NOP));
+		
+		}
+		if (*Config::Limiter::iInGameFPS > 0) {
+			timing2 = _Query_perf_counter();
+			ingamefps = 1.0f / *Config::Limiter::iInGameFPS;
+			auto& trampoline = F4SE::GetTrampoline();
+			trampoline.write_call<5>(FPSLimiter2AddressNG.address(), &LimiterFunc2);
+			CurrentFPS = FPSui = static_cast<long long>(ingamefps * 1000000.0);
 		}
 		ipresentinterval = reinterpret_cast<int*>(VsyncAddressNG.address());
 		REL::safe_write(BethesdaVsyncAddressNG.address(), &NOP4, sizeof(NOP4));
 		REL::safe_write(BethesdaFPSCap1AddressNG.address(), &maxrefreshrate, sizeof(maxrefreshrate));
 		REL::safe_write(BethesdaFPSCap2AddressNG.address(), &maxrefreshrate, sizeof(maxrefreshrate));
-		
 		if (*Config::Limiter::bEnableVSync) {
 			*ipresentinterval = 1;
 			vsync = true;
@@ -145,7 +161,7 @@ namespace LongLoadingTimesFix
 				REL::safe_write(LoadingMenuSpeedHookAddressNG.address() + 0x5, &NOP3, sizeof(NOP3));
 			}
 		}
-	}		
+	}
 }
 
 RE::BSEventNotifyControl MenuWatcher::ProcessEvent(const RE::MenuOpenCloseEvent& evn, RE::BSTEventSource<RE::MenuOpenCloseEvent>*) {
@@ -156,7 +172,7 @@ RE::BSEventNotifyControl MenuWatcher::ProcessEvent(const RE::MenuOpenCloseEvent&
 				*ipresentinterval = 0;
 			}
 			if (limit) {
-				CurrentFPS = loadingFPSmax;
+				CurrentFPS = 0;
 			}
 		}
 		else {

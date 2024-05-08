@@ -5,7 +5,8 @@
 
 namespace LongLoadingTimesFix
 {		
-	void LimterFunc();
+	void LimterFunc1();
+	void LimterFunc2();
 	
 	void Install();
 }
