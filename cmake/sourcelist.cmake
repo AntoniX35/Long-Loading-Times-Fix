@@ -1,0 +1,9 @@
+set(SOURCES
+	include/PCH.h
+	include/Hooks.h
+	include/PerfCounter.h
+	include/Settings.h
+	src/PerfCounter.cpp
+	src/Hooks.cpp
+	src/main.cpp
+)

@@ -1,0 +1,20 @@
+{
+  "name": "long-loading-times-fix",
+  "version-string": "1.1.2",
+  "description": "",
+  "homepage": "",
+  "license": "MIT",
+  "dependencies": [
+    "boost-unordered",
+    "clib-util",
+    "freetype",
+    "rsm-mmio",
+    {
+      "name": "spdlog",
+      "features": [ "wchar" ]
+    },
+    "srell",
+    "xbyak"
+  ],
+  "builtin-baseline": "46a114bc182fdeb162554f255f02a4fba10733b5"
+}

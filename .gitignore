@@ -1,6 +1,3 @@
-[Bb]uild/
-.vs/
-.vscode/
-*.zip
-*.timestamp
-deploy-*.ps1
+build*/
+/.vs
+/include/ImGui/Fonts/BGSFonts.h
