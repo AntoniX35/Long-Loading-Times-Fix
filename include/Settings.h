@@ -49,12 +49,12 @@ public:
 	bool          bEnableVSync{ true };
 	bool          bDisableVSyncWhileLoading{ true };
 	
-	bool          bOnlyBlack{ true };
-	bool          bOnly3D{ true };
-	bool          bDisableAnimation{ true };
+	bool          bOnlyBlack{ false };
+	bool          bOnly3D{ false };
+	bool          bDisableAnimation{ false };
 
-	bool          bTimeoutFix1{ true };
-	bool          bTimeoutFix2{ true };
+	bool          bTimeoutFix1{ false };
+	bool          bTimeoutFix2{ false };
 	
 	float          iInGameFPS{ 0.0f };
 	float          iLoadingScreenFPS{ 60.0f };
